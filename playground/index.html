@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>attrition playground</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --panel: #f7f7f8;
+        --panel-border: #e4e4e7;
+        --text: #18181b;
+        --muted: #71717a;
+        --accent: #18181b;
+        --ok: #16a34a;
+        --ok-bg: rgba(22, 163, 74, 0.08);
+        --err: #dc2626;
+        --info: #2563eb;
+        --info-bg: rgba(37, 99, 235, 0.08);
+        --warning: #b45309;
+        --warning-bg: rgba(180, 83, 9, 0.1);
+        --loss: #dc2626;
+        --loss-bg: rgba(220, 38, 38, 0.1);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0e0e11;
+          --panel: #17171b;
+          --panel-border: #2a2a30;
+          --text: #ededf0;
+          --muted: #9a9aa3;
+          --accent: #ededf0;
+          --ok: #4ade80;
+          --ok-bg: rgba(74, 222, 128, 0.12);
+          --err: #f87171;
+          --info: #60a5fa;
+          --info-bg: rgba(96, 165, 250, 0.14);
+          --warning: #fbbf24;
+          --warning-bg: rgba(251, 191, 36, 0.14);
+          --loss: #f87171;
+          --loss-bg: rgba(248, 113, 113, 0.14);
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        line-height: 1.5;
+      }
+      .wrap {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 24px 20px 48px;
+      }
+      header h1 {
+        font-size: 20px;
+        margin: 0 0 4px;
+        font-weight: 650;
+      }
+      header p {
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        background: var(--panel);
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 0.92em;
+      }
+      .controls {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px 18px;
+        padding: 12px 14px;
+        margin-bottom: 18px;
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-radius: 10px;
+      }
+      .controls label {
+        font-size: 13px;
+        color: var(--muted);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .controls select {
+        font: inherit;
+        font-size: 13px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--panel-border);
+        background: var(--bg);
+        color: var(--text);
+      }
+      .arrow {
+        color: var(--muted);
+        font-size: 15px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 48fr) minmax(0, 52fr);
+        gap: 20px;
+      }
+      @media (max-width: 880px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .panel {
+        border: 1px solid var(--panel-border);
+        border-radius: 10px;
+        background: var(--panel);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .panel > .head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--panel-border);
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .col-right {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        min-width: 0;
+      }
+      textarea {
+        width: 100%;
+        min-height: 60vh;
+        border: 0;
+        resize: vertical;
+        padding: 12px;
+        background: transparent;
+        color: var(--text);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13px;
+        line-height: 1.55;
+        white-space: pre;
+        overflow: auto;
+        outline: none;
+        tab-size: 2;
+      }
+      .status {
+        padding: 7px 12px;
+        border-top: 1px solid var(--panel-border);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        color: var(--ok);
+      }
+      .status.err {
+        color: var(--err);
+      }
+      #notes {
+        list-style: none;
+        margin: 0;
+        padding: 12px;
+        overflow: auto;
+        max-height: 42vh;
+      }
+      #notes li {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        border-left: 3px solid var(--muted);
+        background: var(--panel);
+        padding: 8px 12px;
+        border-radius: 0 6px 6px 0;
+        margin-bottom: 6px;
+      }
+      #notes li[data-sev="info"] {
+        border-left-color: var(--info);
+        background: var(--info-bg);
+      }
+      #notes li[data-sev="warning"] {
+        border-left-color: var(--warning);
+        background: var(--warning-bg);
+      }
+      #notes li[data-sev="loss"] {
+        border-left-color: var(--loss);
+        background: var(--loss-bg);
+      }
+      #notes li[data-sev="ok"] {
+        border-left-color: var(--ok);
+        background: var(--ok-bg);
+      }
+      .badge {
+        flex: none;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-weight: 600;
+        font-size: 11px;
+        line-height: 1;
+        letter-spacing: 0.04em;
+        padding: 3px 6px;
+        border-radius: 4px;
+        margin-top: 1px;
+      }
+      .badge.info {
+        color: var(--info);
+        background: var(--info-bg);
+      }
+      .badge.warning {
+        color: var(--warning);
+        background: var(--warning-bg);
+      }
+      .badge.loss {
+        color: var(--loss);
+        background: var(--loss-bg);
+      }
+      .badge.ok {
+        color: var(--ok);
+        background: var(--ok-bg);
+      }
+      .note-body {
+        flex: 1 1 auto;
+        min-width: 0;
+        font-size: 13.5px;
+      }
+      .note-path {
+        display: inline-block;
+        margin-top: 3px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        opacity: 0.7;
+        word-break: break-all;
+      }
+      .summary {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--muted);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .summary.has-loss {
+        color: var(--loss);
+      }
+      .summary.has-warning {
+        color: var(--warning);
+      }
+      .strict-pill {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        color: #fff;
+        background: var(--loss);
+        padding: 2px 7px;
+        border-radius: 999px;
+      }
+      pre#output {
+        margin: 0;
+        padding: 12px;
+        overflow: auto;
+        max-height: 60vh;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12.5px;
+        line-height: 1.5;
+      }
+      .stale {
+        opacity: 0.45;
+        transition: opacity 0.1s;
+      }
+      button.copy {
+        font: inherit;
+        font-size: 12px;
+        padding: 3px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--panel-border);
+        background: var(--bg);
+        color: var(--text);
+        cursor: pointer;
+      }
+      button.copy:hover {
+        border-color: var(--muted);
+      }
+      #fatal {
+        display: none;
+        padding: 16px 18px;
+        border: 1px solid var(--err);
+        border-radius: 10px;
+        background: var(--loss-bg);
+        color: var(--err);
+        font-size: 14px;
+        margin-bottom: 18px;
+      }
+      #fatal code {
+        background: rgba(0, 0, 0, 0.15);
+        color: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>attrition playground</h1>
+        <p>
+          Convert a conversation between providers, and see exactly what didn't survive the trip.
+        </p>
+      </header>
+
+      <div id="fatal">
+        Couldn't load the library. Build it first: run <code>pnpm build</code>, then reload this
+        page. (The playground imports the real compiled <code>dist/index.js</code>, so the notes you
+        see are the actual conversion output — no inlined copy that could drift.)
+      </div>
+
+      <div class="controls">
+        <label>From <select id="from"></select></label>
+        <span class="arrow">→</span>
+        <label>To <select id="to"></select></label>
+        <label>Example <select id="example"></select></label>
+        <label><input type="checkbox" id="textOnly" /> <code>--text-only</code></label>
+        <label><input type="checkbox" id="strict" /> <code>--strict</code></label>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <div class="head"><span>Input JSON (from)</span></div>
+          <textarea id="input" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+          <div class="status" id="status">valid JSON</div>
+        </div>
+
+        <div class="col-right">
+          <div class="panel">
+            <div class="head">
+              <span>Lossiness report</span>
+              <span class="summary" id="summary"></span>
+            </div>
+            <ul id="notes"></ul>
+          </div>
+          <div class="panel">
+            <div class="head">
+              <span>Output (to)</span>
+              <button class="copy" id="copy">Copy</button>
+            </div>
+            <pre id="output"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      // Import the REAL compiled library so the report shown is the true output.
+      // dist/ is gitignored and only exists after `pnpm build`; on failure we show
+      // the #fatal banner instead of a blank page.
+      let convert;
+      let PROVIDERS;
+      try {
+        const mod = await import("../dist/index.js");
+        convert = mod.convert;
+        PROVIDERS = mod.PROVIDERS;
+      } catch (e) {
+        document.getElementById("fatal").style.display = "block";
+        throw e;
+      }
+
+      const $ = (id) => document.getElementById(id);
+      const els = {
+        input: $("input"),
+        from: $("from"),
+        to: $("to"),
+        example: $("example"),
+        textOnly: $("textOnly"),
+        strict: $("strict"),
+        status: $("status"),
+        notes: $("notes"),
+        output: $("output"),
+        summary: $("summary"),
+        copy: $("copy"),
+      };
+
+      // ── preloaded examples (each lights up a different severity) ──────────────
+      const EXAMPLES = [
+        {
+          label: "Multi-system merge (openai → anthropic)",
+          from: "openai",
+          to: "anthropic",
+          textOnly: false,
+          payload: {
+            messages: [
+              { role: "system", content: "You are terse." },
+              { role: "system", content: "Always answer in English." },
+              { role: "user", content: "Hola, ¿qué tal?" },
+            ],
+          },
+        },
+        {
+          label: "Tool call + result (anthropic → gemini)",
+          from: "anthropic",
+          to: "gemini",
+          textOnly: false,
+          payload: {
+            system: "You can call tools.",
+            messages: [
+              { role: "user", content: [{ type: "text", text: "Weather in Paris?" }] },
+              {
+                role: "assistant",
+                content: [
+                  { type: "tool_use", id: "toolu_01", name: "get_weather", input: { city: "Paris" } },
+                ],
+              },
+              {
+                role: "user",
+                content: [
+                  { type: "tool_result", tool_use_id: "toolu_01", content: "18°C, sunny" },
+                ],
+              },
+            ],
+          },
+        },
+        {
+          label: "Image → text-only target (openai → gemini)",
+          from: "openai",
+          to: "gemini",
+          textOnly: true,
+          payload: {
+            messages: [
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: "What is in this image?" },
+                  {
+                    type: "image_url",
+                    image_url: { url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==" },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ];
+
+      // ── populate controls from the library's own provider list ────────────────
+      function fillProviders(select, selected) {
+        for (const p of PROVIDERS) {
+          const opt = document.createElement("option");
+          opt.value = p;
+          opt.textContent = p;
+          if (p === selected) opt.selected = true;
+          select.appendChild(opt);
+        }
+      }
+      fillProviders(els.from, "openai");
+      fillProviders(els.to, "anthropic");
+
+      EXAMPLES.forEach((ex, i) => {
+        const opt = document.createElement("option");
+        opt.value = String(i);
+        opt.textContent = ex.label;
+        els.example.appendChild(opt);
+      });
+
+      // ── rendering ─────────────────────────────────────────────────────────────
+      const SEV_MEANING = {
+        info: "Faithful, reversible change",
+        warning: "Lossy but necessary reshaping",
+        loss: "Content did not survive",
+      };
+
+      function renderNotes(notes) {
+        els.notes.replaceChildren();
+        if (notes.length === 0) {
+          const li = document.createElement("li");
+          li.dataset.sev = "ok";
+          const badge = document.createElement("span");
+          badge.className = "badge ok";
+          badge.textContent = "OK";
+          const body = document.createElement("span");
+          body.className = "note-body";
+          body.textContent = "Lossless — everything survived the trip.";
+          li.append(badge, body);
+          els.notes.appendChild(li);
+          return;
+        }
+        for (const n of notes) {
+          const li = document.createElement("li");
+          li.dataset.sev = n.severity;
+          li.title = SEV_MEANING[n.severity] ?? "";
+
+          const badge = document.createElement("span");
+          badge.className = "badge " + n.severity;
+          badge.textContent = n.severity.toUpperCase();
+
+          const body = document.createElement("span");
+          body.className = "note-body";
+          body.textContent = n.message;
+          if (n.path) {
+            const path = document.createElement("span");
+            path.className = "note-path";
+            path.textContent = n.path;
+            body.appendChild(document.createElement("br"));
+            body.appendChild(path);
+          }
+          li.append(badge, body);
+          els.notes.appendChild(li);
+        }
+      }
+
+      function renderSummary(notes) {
+        const counts = { info: 0, warning: 0, loss: 0 };
+        for (const n of notes) counts[n.severity] = (counts[n.severity] ?? 0) + 1;
+        const parts = [];
+        if (counts.info) parts.push(counts.info + " info");
+        if (counts.warning) parts.push(counts.warning + " warning");
+        if (counts.loss) parts.push(counts.loss + " loss");
+        els.summary.replaceChildren();
+        els.summary.classList.toggle("has-loss", counts.loss > 0);
+        els.summary.classList.toggle("has-warning", counts.loss === 0 && counts.warning > 0);
+
+        const text = document.createElement("span");
+        text.textContent = parts.length ? parts.join(" · ") : "lossless";
+        els.summary.appendChild(text);
+
+        // --strict is a display concern only — it never changes convert() inputs.
+        if (els.strict.checked && counts.loss > 0) {
+          const pill = document.createElement("span");
+          pill.className = "strict-pill";
+          pill.textContent = "STRICT: would exit 1";
+          els.summary.appendChild(pill);
+        }
+      }
+
+      function setStatus(ok, msg) {
+        els.status.textContent = msg;
+        els.status.classList.toggle("err", !ok);
+      }
+
+      function setStale(stale) {
+        els.output.classList.toggle("stale", stale);
+        els.notes.classList.toggle("stale", stale);
+      }
+
+      // ── pipeline ────────────────────────────────────────────────────────────
+      function run() {
+        let parsed;
+        try {
+          parsed = JSON.parse(els.input.value);
+        } catch (e) {
+          setStatus(false, String(e.message || e));
+          setStale(true); // keep last good output visible but dimmed
+          return;
+        }
+        const from = els.from.value;
+        const to = els.to.value;
+        const textOnly = els.textOnly.checked;
+
+        let result;
+        try {
+          result = convert(from, to, parsed, { textOnly });
+        } catch (e) {
+          setStatus(false, `Couldn't convert as ${from} → ${to}: ${e.message || e}`);
+          setStale(true);
+          return;
+        }
+        setStatus(true, "valid JSON");
+        setStale(false);
+        els.output.textContent = JSON.stringify(result.output, null, 2);
+        renderNotes(result.notes);
+        renderSummary(result.notes);
+      }
+
+      // ── events ──────────────────────────────────────────────────────────────
+      let debounce;
+      els.input.addEventListener("input", () => {
+        clearTimeout(debounce);
+        debounce = setTimeout(run, 250);
+      });
+      els.from.addEventListener("change", run);
+      els.to.addEventListener("change", run);
+      els.textOnly.addEventListener("change", run);
+      // strict only affects presentation; re-render summary without re-converting.
+      els.strict.addEventListener("change", run);
+
+      els.example.addEventListener("change", () => {
+        const ex = EXAMPLES[Number(els.example.value)];
+        if (!ex) return;
+        els.from.value = ex.from;
+        els.to.value = ex.to;
+        els.textOnly.checked = ex.textOnly;
+        els.input.value = JSON.stringify(ex.payload, null, 2);
+        run();
+      });
+
+      els.copy.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(els.output.textContent);
+          const prev = els.copy.textContent;
+          els.copy.textContent = "Copied";
+          setTimeout(() => {
+            els.copy.textContent = prev;
+          }, 1200);
+        } catch {
+          /* clipboard blocked; ignore */
+        }
+      });
+
+      // ── initial load ──────────────────────────────────────────────────────────
+      els.example.value = "0";
+      const first = EXAMPLES[0];
+      els.from.value = first.from;
+      els.to.value = first.to;
+      els.textOnly.checked = first.textOnly;
+      els.input.value = JSON.stringify(first.payload, null, 2);
+      run();
+    </script>
+  </body>
+</html>
