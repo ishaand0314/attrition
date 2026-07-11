@@ -874,14 +874,16 @@
       }
 
       // ── live command echo: mirror the actual CLI invocation ───────────────────
+      const escAttr = (s) =>
+        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       function renderCmd() {
         const from = els.from.value;
         const to = els.to.value;
         const parts = [
           `<span class="bin">attrition</span>`,
           `<span class="sub">convert</span>`,
-          `<span class="flag">--from</span> <span class="val">${from}</span>`,
-          `<span class="flag">--to</span> <span class="val">${to}</span>`,
+          `<span class="flag">--from</span> <span class="val">${escAttr(from)}</span>`,
+          `<span class="flag">--to</span> <span class="val">${escAttr(to)}</span>`,
         ];
         if (els.textOnly.checked) parts.push(`<span class="flag">--text-only</span>`);
         if (els.strict.checked) parts.push(`<span class="flag">--strict</span>`);
@@ -952,6 +954,7 @@
           const v = els.input.value;
           els.input.value = v.slice(0, s) + "  " + v.slice(eIdx);
           els.input.selectionStart = els.input.selectionEnd = s + 2;
+          run(); // setting .value programmatically doesn't fire the input event
         }
       });
 
