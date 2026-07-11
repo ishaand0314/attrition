@@ -19,7 +19,7 @@ system prompts move, tool-call ids get remapped, images get dropped by text-only
 models. Most tools do this silently. This one hands you a list of every change.
 
 ```ts
-import { convert } from "attrition";
+import { convert } from "llm-attrition";
 
 const { output, notes } = convert("openai", "anthropic", conversation);
 // output: the Anthropic-shaped payload
@@ -138,7 +138,7 @@ assume a well-formed conversation. See [docs/architecture.md](docs/architecture.
 ## In your own code
 
 ```ts
-import { convert, hasLoss } from "attrition";
+import { convert, hasLoss } from "llm-attrition";
 
 const { output, notes } = convert("gemini", "openai", conversation);
 
@@ -154,15 +154,10 @@ send(output);
 The canonical IR (`Conversation`, `Message`, `Part`, ...) is exported too, if you
 want to build against it directly.
 
-> **Note on the IR.** The canonical `Message` type in `src/message.ts` is the
-> same shape used by labkit (this series' day-1 tool). There is no shared npm
-> package between the two repos; the type is kept in sync by hand. If you change
-> it here, mirror it in labkit.
-
 ## Scope
 
-Day 2 of a 7-in-7 build. It converts **conversation content** (messages, roles,
-text, images, tool calls and results, the system prompt). It does not touch
-request config that isn't part of the conversation: sampling params,
+It converts **conversation content** (messages, roles, text, images, tool calls
+and results, the system prompt). It does not touch request config that isn't part
+of the conversation: sampling params,
 `tool_choice`/`response_format`, `cache_control`, `safetySettings`, streaming, or
 audio parts. Those are config, not conversation.

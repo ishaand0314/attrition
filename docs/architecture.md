@@ -57,10 +57,6 @@ Notes from all three stages are concatenated in order, so the returned
   user/function turn. Normalizing to a distinct role lets each serializer relocate
   them without special-casing where they came from.
 
-The IR is **hand-synced with labkit**. There is no shared npm package between the
-two repos, so `src/message.ts` carries a header saying so. If the shape changes
-here, it must change in labkit too.
-
 ## The lossiness report is the product
 
 `src/notes.ts` defines `LossNote` (`severity`, `message`, `path`) and
@@ -86,7 +82,7 @@ both faithful and valid, it prefers valid and honest over faithful and invented.
 
 ## Tool choices
 
-- **pnpm** — matches the rest of the 7-in-7 tooling.
+- **pnpm** — fast, disk-efficient installs with a strict lockfile.
 - **Strict TypeScript** — `strict`, `noUncheckedIndexedAccess`,
   `verbatimModuleSyntax`. The IR is small and precise; there are no `any`s and no
   non-null assertions in `src/`.
@@ -98,9 +94,9 @@ both faithful and valid, it prefers valid and honest over faithful and invented.
 
 - The package exposes a **library** (`src/index.ts`) and a **CLI** (`src/cli.ts`).
   The library is the product; the CLI is a thin shell over it.
-- The CLI router (`src/cli-router.ts`) is copied from labkit's `@labkit/core` and
-  kept in sync by hand, so every 7-in-7 tool shares the same `--json` / `--help`
-  UX. There is no shared package to import it from.
+- The CLI router (`src/cli-router.ts`) gives the CLI a small, consistent
+  surface — `--json` / `--help` and uniform error handling — kept separate from
+  the conversion logic it drives.
 - Pure functions, no hidden global state, so everything is trivially testable.
 - The tests double as the spec: the seams table in the README is the contract,
   and every row has a test.
