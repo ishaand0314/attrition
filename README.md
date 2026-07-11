@@ -30,7 +30,19 @@ The rule: **never throw on a lossy conversion, never convert silently.**
 
 ## Install
 
-Not yet published to npm. Clone and build from source:
+```bash
+npm install llm-attrition
+```
+
+Or run the CLI without installing:
+
+```bash
+npx llm-attrition convert --from openai --to anthropic --file conv.json
+```
+
+The npm package is `llm-attrition`; the CLI command it installs is `attrition`.
+
+To build from source instead:
 
 ```bash
 git clone https://github.com/ishaand0314/attrition.git
@@ -38,9 +50,6 @@ cd attrition
 pnpm install && pnpm build
 node dist/cli.js convert --from openai --to anthropic --file conv.json
 ```
-
-The examples below use `attrition` as the command name; that is the CLI's own
-name (`node dist/cli.js` while running from source).
 
 ## Use it
 
