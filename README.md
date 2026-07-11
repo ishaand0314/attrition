@@ -34,13 +34,20 @@ The rule: **never throw on a lossy conversion, never convert silently.**
 npm install llm-attrition
 ```
 
-Or run the CLI without installing:
+The npm package is `llm-attrition`; the CLI command it installs is `attrition`.
+Because those names differ, run the CLI with `npx` by naming the package with
+`-p` and the command after it (this form works on Windows too):
 
 ```bash
-npx llm-attrition convert --from openai --to anthropic --file conv.json
+npx -p llm-attrition attrition convert --from openai --to anthropic --file conv.json
 ```
 
-The npm package is `llm-attrition`; the CLI command it installs is `attrition`.
+Or install it and call `attrition` directly:
+
+```bash
+npm install -g llm-attrition
+attrition convert --from openai --to anthropic --file conv.json
+```
 
 To build from source instead:
 
