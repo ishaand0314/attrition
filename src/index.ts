@@ -5,7 +5,7 @@
  *
  * The library is the product; the CLI (cli.ts) is a thin shell over it.
  *
- *   import { convert } from "attrition";
+ *   import { convert } from "llm-attrition";
  *   const { output, notes } = convert("openai", "anthropic", payload);
  */
 

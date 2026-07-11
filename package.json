@@ -1,5 +1,5 @@
 {
-  "name": "attrition",
+  "name": "llm-attrition",
   "version": "0.1.0",
   "description": "Convert a conversation between OpenAI, Anthropic, Gemini, and AWS Bedrock message formats, and get a report of exactly what did not survive the trip.",
   "license": "MIT",
