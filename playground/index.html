@@ -3,356 +3,647 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>attrition playground</title>
+    <title>attrition · playground</title>
     <style>
+      /* attrition playground. Terminal-styled: monospace throughout, a plain
+         window frame, flat solid colors, one accent. No gradients or glow. */
       :root {
-        --bg: #ffffff;
-        --panel: #f7f7f8;
-        --panel-border: #e4e4e7;
-        --text: #18181b;
-        --muted: #71717a;
-        --accent: #18181b;
-        --ok: #16a34a;
-        --ok-bg: rgba(22, 163, 74, 0.08);
-        --err: #dc2626;
-        --info: #2563eb;
-        --info-bg: rgba(37, 99, 235, 0.08);
-        --warning: #b45309;
-        --warning-bg: rgba(180, 83, 9, 0.1);
-        --loss: #dc2626;
-        --loss-bg: rgba(220, 38, 38, 0.1);
+        color-scheme: dark;
+        --bg: #101216;
+        --bg-deep: #0b0d10;
+        --chrome: #16181d;
+        --panel: #131519;
+        --border: #24272e;
+        --text: #cdd0d6;
+        --muted: #7d828c;
+        --dim: #565b64;
+        --green: #7fb069;
+        --cyan: #5fa8c7;
+        --amber: #c99a4b;
+        --red: #cd6b6b;
+        --violet: #9a86c4;
+        --mono: ui-monospace, "SFMono-Regular", "Cascadia Code", "JetBrains Mono",
+          Menlo, Consolas, monospace;
       }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #0e0e11;
-          --panel: #17171b;
-          --panel-border: #2a2a30;
-          --text: #ededf0;
-          --muted: #9a9aa3;
-          --accent: #ededf0;
-          --ok: #4ade80;
-          --ok-bg: rgba(74, 222, 128, 0.12);
-          --err: #f87171;
-          --info: #60a5fa;
-          --info-bg: rgba(96, 165, 250, 0.14);
-          --warning: #fbbf24;
-          --warning-bg: rgba(251, 191, 36, 0.14);
-          --loss: #f87171;
-          --loss-bg: rgba(248, 113, 113, 0.14);
-        }
+      [data-sev="info"] {
+        --sev: var(--cyan);
+      }
+      [data-sev="warning"] {
+        --sev: var(--amber);
+      }
+      [data-sev="loss"] {
+        --sev: var(--red);
+      }
+      [data-sev="ok"] {
+        --sev: var(--green);
       }
       * {
         box-sizing: border-box;
       }
+      html {
+        background: var(--bg-deep);
+      }
       body {
         margin: 0;
-        background: var(--bg);
+        min-height: 100vh;
         color: var(--text);
-        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
-        line-height: 1.5;
+        background: var(--bg-deep);
+        font-family: var(--mono);
+        font-size: 13px;
+        line-height: 1.55;
       }
+      ::selection {
+        background: #2f3a44;
+      }
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: #2f333b transparent;
+      }
+      *::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      *::-webkit-scrollbar-thumb {
+        background: #2f333b;
+        border-radius: 5px;
+        border: 2px solid transparent;
+        background-clip: padding-box;
+      }
+
       .wrap {
-        max-width: 1400px;
+        max-width: 1360px;
         margin: 0 auto;
-        padding: 24px 20px 48px;
+        padding: 20px 18px 44px;
       }
-      header h1 {
-        font-size: 20px;
-        margin: 0 0 4px;
-        font-weight: 650;
+
+      /* window frame */
+      .term {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--bg);
+        overflow: hidden;
       }
-      header p {
-        margin: 0 0 18px;
+      .titlebar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        background: var(--chrome);
+        border-bottom: 1px solid var(--border);
+      }
+      .lights {
+        display: flex;
+        gap: 7px;
+        flex: none;
+      }
+      .lights i {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        display: block;
+      }
+      .lights i:nth-child(1) {
+        background: #43464d;
+      }
+      .lights i:nth-child(2) {
+        background: #43464d;
+      }
+      .lights i:nth-child(3) {
+        background: #43464d;
+      }
+      .title {
+        flex: 1;
+        text-align: center;
         color: var(--muted);
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* header */
+      .banner {
+        padding: 14px 16px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+      .banner .prompt {
+        color: var(--green);
+      }
+      .banner .line1 {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .banner h1 {
+        margin: 8px 0 3px;
         font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
       }
-      code {
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        background: var(--panel);
-        padding: 1px 5px;
-        border-radius: 4px;
-        font-size: 0.92em;
+      .banner p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12.5px;
+        max-width: 78ch;
       }
+
+      /* controls */
       .controls {
-        position: sticky;
-        top: 0;
-        z-index: 5;
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 14px 18px;
-        padding: 12px 14px;
-        margin-bottom: 18px;
+        gap: 9px 8px;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border);
         background: var(--panel);
-        border: 1px solid var(--panel-border);
-        border-radius: 10px;
+        position: sticky;
+        top: 0;
+        z-index: 5;
       }
-      .controls label {
-        font-size: 13px;
-        color: var(--muted);
+      .ctl {
         display: inline-flex;
         align-items: center;
         gap: 6px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .flag {
+        color: var(--violet);
       }
       .controls select {
         font: inherit;
-        font-size: 13px;
-        padding: 4px 8px;
-        border-radius: 6px;
-        border: 1px solid var(--panel-border);
-        background: var(--bg);
+        font-size: 12px;
         color: var(--text);
+        background: var(--bg-deep);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 3px 22px 3px 7px;
+        cursor: pointer;
+        appearance: none;
+        background-image: linear-gradient(45deg, transparent 50%, var(--dim) 50%),
+          linear-gradient(135deg, var(--dim) 50%, transparent 50%);
+        background-position: calc(100% - 12px) 55%, calc(100% - 8px) 55%;
+        background-size: 4px 4px, 4px 4px;
+        background-repeat: no-repeat;
+      }
+      .controls select:hover {
+        border-color: var(--dim);
+      }
+      .controls select:focus-visible {
+        outline: none;
+        border-color: var(--cyan);
+      }
+      .controls select#example {
+        max-width: 300px;
       }
       .arrow {
-        color: var(--muted);
-        font-size: 15px;
+        color: var(--dim);
+        padding: 0 2px;
       }
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 8px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--bg-deep);
+        cursor: pointer;
+        user-select: none;
+        font-size: 12px;
+        color: var(--dim);
+      }
+      .toggle:hover {
+        border-color: var(--dim);
+      }
+      .toggle input {
+        appearance: none;
+        width: 12px;
+        height: 12px;
+        border: 1px solid var(--dim);
+        border-radius: 2px;
+        background: transparent;
+        display: grid;
+        place-content: center;
+        cursor: pointer;
+        flex: none;
+      }
+      .toggle input::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        background: var(--violet);
+        transform: scale(0);
+      }
+      .toggle:has(input:checked) {
+        color: var(--text);
+        border-color: var(--dim);
+      }
+      .toggle input:checked::before {
+        transform: scale(1);
+      }
+      .toggle .flag {
+        color: inherit;
+      }
+      .spacer {
+        flex: 1 1 auto;
+      }
+      .hint {
+        font-size: 11px;
+        color: var(--dim);
+      }
+
+      /* echoed command */
+      .cmdline {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        padding: 8px 16px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-deep);
+        font-size: 12.5px;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+      .cmdline .prompt {
+        color: var(--green);
+        flex: none;
+      }
+      #cmd .bin {
+        color: var(--text);
+      }
+      #cmd .sub {
+        color: var(--text);
+      }
+      #cmd .flag {
+        color: var(--violet);
+      }
+      #cmd .val {
+        color: var(--cyan);
+      }
+      #cmd .pipe {
+        color: var(--dim);
+      }
+
+      /* main grid */
       .grid {
         display: grid;
-        grid-template-columns: minmax(0, 48fr) minmax(0, 52fr);
-        gap: 20px;
+        grid-template-columns: minmax(0, 47fr) minmax(0, 53fr);
       }
-      @media (max-width: 880px) {
+      @media (max-width: 900px) {
         .grid {
           grid-template-columns: 1fr;
         }
       }
-      .panel {
-        border: 1px solid var(--panel-border);
-        border-radius: 10px;
-        background: var(--panel);
-        overflow: hidden;
+      .pane {
         display: flex;
         flex-direction: column;
+        min-width: 0;
+        border-right: 1px solid var(--border);
       }
-      .panel > .head {
+      .grid > .pane:last-child {
+        border-right: 0;
+      }
+      @media (max-width: 900px) {
+        .pane {
+          border-right: 0;
+          border-bottom: 1px solid var(--border);
+        }
+      }
+      .pane-head {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        padding: 9px 12px;
-        border-bottom: 1px solid var(--panel-border);
-        font-size: 13px;
-        font-weight: 600;
+        gap: 8px;
+        padding: 7px 13px;
+        background: var(--panel);
+        border-bottom: 1px solid var(--border);
+        font-size: 11.5px;
+        color: var(--muted);
       }
-      .col-right {
+      .pane-head .grow {
+        flex: 1;
+      }
+      .pane-head .tag {
+        color: var(--muted);
+        font-size: 11.5px;
+      }
+
+      /* input */
+      .editor {
         display: flex;
-        flex-direction: column;
-        gap: 20px;
-        min-width: 0;
+        flex: 1;
+        min-height: 340px;
+        background: var(--bg);
       }
       textarea {
         width: 100%;
-        min-height: 60vh;
+        min-height: 58vh;
         border: 0;
         resize: vertical;
         padding: 12px;
         background: transparent;
         color: var(--text);
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 13px;
-        line-height: 1.55;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        line-height: 1.6;
         white-space: pre;
         overflow: auto;
         outline: none;
         tab-size: 2;
+        caret-color: var(--green);
       }
-      .status {
-        padding: 7px 12px;
-        border-top: 1px solid var(--panel-border);
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      .statusbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 13px;
+        border-top: 1px solid var(--border);
+        background: var(--panel);
         font-size: 12px;
-        color: var(--ok);
+        color: var(--green);
       }
-      .status.err {
-        color: var(--err);
+      .statusbar.err {
+        color: var(--red);
       }
+
+      /* right column */
+      .stack {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .section + .section {
+        border-top: 1px solid var(--border);
+      }
+
       #notes {
         list-style: none;
         margin: 0;
-        padding: 12px;
+        padding: 10px;
         overflow: auto;
-        max-height: 42vh;
+        max-height: 40vh;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
       }
       #notes li {
         display: flex;
         align-items: flex-start;
         gap: 10px;
-        border-left: 3px solid var(--muted);
+        border-left: 2px solid var(--sev);
         background: var(--panel);
-        padding: 8px 12px;
-        border-radius: 0 6px 6px 0;
-        margin-bottom: 6px;
-      }
-      #notes li[data-sev="info"] {
-        border-left-color: var(--info);
-        background: var(--info-bg);
-      }
-      #notes li[data-sev="warning"] {
-        border-left-color: var(--warning);
-        background: var(--warning-bg);
-      }
-      #notes li[data-sev="loss"] {
-        border-left-color: var(--loss);
-        background: var(--loss-bg);
-      }
-      #notes li[data-sev="ok"] {
-        border-left-color: var(--ok);
-        background: var(--ok-bg);
+        padding: 8px 11px;
       }
       .badge {
         flex: none;
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-family: var(--mono);
         font-weight: 600;
-        font-size: 11px;
+        font-size: 10.5px;
         line-height: 1;
-        letter-spacing: 0.04em;
-        padding: 3px 6px;
-        border-radius: 4px;
+        letter-spacing: 0.03em;
+        padding: 3px 5px;
+        border-radius: 3px;
         margin-top: 1px;
-      }
-      .badge.info {
-        color: var(--info);
-        background: var(--info-bg);
-      }
-      .badge.warning {
-        color: var(--warning);
-        background: var(--warning-bg);
-      }
-      .badge.loss {
-        color: var(--loss);
-        background: var(--loss-bg);
-      }
-      .badge.ok {
-        color: var(--ok);
-        background: var(--ok-bg);
+        color: var(--sev);
+        border: 1px solid var(--sev);
       }
       .note-body {
         flex: 1 1 auto;
         min-width: 0;
-        font-size: 13.5px;
+        font-size: 12.5px;
+        color: var(--text);
       }
       .note-path {
         display: inline-block;
         margin-top: 3px;
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 12px;
-        opacity: 0.7;
+        font-size: 11.5px;
+        color: var(--muted);
         word-break: break-all;
       }
+
       .summary {
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 12px;
-        font-weight: 500;
-        color: var(--muted);
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
+        font-size: 11.5px;
+        color: var(--muted);
       }
-      .summary.has-loss {
-        color: var(--loss);
+      .summary .count {
+        color: var(--sev);
       }
-      .summary.has-warning {
-        color: var(--warning);
+      .summary .clean {
+        color: var(--green);
       }
       .strict-pill {
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.03em;
-        color: #fff;
-        background: var(--loss);
-        padding: 2px 7px;
-        border-radius: 999px;
+        color: var(--red);
+        border: 1px solid var(--red);
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-size: 10.5px;
       }
+
       pre#output {
         margin: 0;
         padding: 12px;
         overflow: auto;
-        max-height: 60vh;
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        max-height: 58vh;
+        font-family: var(--mono);
         font-size: 12.5px;
-        line-height: 1.5;
+        line-height: 1.6;
+        color: var(--text);
+        background: var(--bg);
       }
+      .j-key {
+        color: var(--cyan);
+      }
+      .j-str {
+        color: var(--green);
+      }
+      .j-num {
+        color: var(--amber);
+      }
+      .j-bool {
+        color: var(--violet);
+      }
+      .j-null {
+        color: var(--dim);
+      }
+
       .stale {
-        opacity: 0.45;
-        transition: opacity 0.1s;
+        opacity: 0.4;
       }
       button.copy {
         font: inherit;
-        font-size: 12px;
-        padding: 3px 10px;
-        border-radius: 6px;
-        border: 1px solid var(--panel-border);
-        background: var(--bg);
-        color: var(--text);
+        font-family: var(--mono);
+        font-size: 11px;
+        padding: 2px 9px;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        background: var(--bg-deep);
+        color: var(--muted);
         cursor: pointer;
       }
       button.copy:hover {
-        border-color: var(--muted);
+        color: var(--text);
+        border-color: var(--dim);
       }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 18px;
+        padding: 11px 16px;
+        margin-top: 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--panel);
+        font-size: 11.5px;
+        color: var(--muted);
+      }
+      .legend .item {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .legend .swatch {
+        width: 8px;
+        height: 8px;
+        flex: none;
+      }
+      .legend .src {
+        margin-left: auto;
+        color: var(--dim);
+      }
+      .legend a {
+        color: var(--cyan);
+        text-decoration: none;
+      }
+      .legend a:hover {
+        text-decoration: underline;
+      }
+
       #fatal {
         display: none;
-        padding: 16px 18px;
-        border: 1px solid var(--err);
-        border-radius: 10px;
-        background: var(--loss-bg);
-        color: var(--err);
-        font-size: 14px;
-        margin-bottom: 18px;
+        padding: 13px 15px;
+        border: 1px solid var(--red);
+        border-left-width: 2px;
+        border-radius: 4px;
+        background: var(--panel);
+        color: var(--text);
+        font-size: 12.5px;
+        margin-bottom: 14px;
+      }
+      #fatal .head {
+        color: var(--red);
+        font-weight: 600;
+        margin-bottom: 4px;
       }
       #fatal code {
-        background: rgba(0, 0, 0, 0.15);
-        color: inherit;
+        color: var(--amber);
       }
     </style>
   </head>
   <body>
     <div class="wrap">
-      <header>
-        <h1>attrition playground</h1>
-        <p>
-          Convert a conversation between providers, and see exactly what didn't survive the trip.
-        </p>
-      </header>
-
       <div id="fatal">
-        Couldn't load the library. Build it first: run <code>pnpm build</code>, then reload this
-        page. (The playground imports the real compiled <code>dist/index.js</code>, so the notes you
-        see are the actual conversion output — no inlined copy that could drift.)
+        <div class="head">error: could not load the compiled library</div>
+        Build it first: run <code>pnpm build</code>, then reload this page. Serve from the repo root
+        (<code>pnpm playground</code>) and open <code>/playground/</code> — the page imports the real
+        compiled <code>dist/index.js</code>, so what you see is the actual conversion output, with no
+        inlined copy that could drift.
       </div>
 
-      <div class="controls">
-        <label>From <select id="from"></select></label>
-        <span class="arrow">→</span>
-        <label>To <select id="to"></select></label>
-        <label>Example <select id="example"></select></label>
-        <label><input type="checkbox" id="textOnly" /> <code>--text-only</code></label>
-        <label><input type="checkbox" id="strict" /> <code>--strict</code></label>
+      <div class="term">
+        <div class="titlebar">
+          <div class="lights"><i></i><i></i><i></i></div>
+          <div class="title">attrition — playground</div>
+        </div>
+
+        <div class="banner">
+          <div class="line1"><span class="prompt">$</span> attrition convert --help</div>
+          <h1>attrition playground</h1>
+          <p>
+            Convert a conversation between provider formats and see exactly what didn't survive the
+            trip. Edit the JSON on the left; the report and output update as you type. Everything is
+            the real output of the compiled library — the same thing the CLI prints.
+          </p>
+        </div>
+
+        <div class="controls">
+          <span class="ctl"><span class="flag">--from</span><select id="from"></select></span>
+          <span class="arrow">-></span>
+          <span class="ctl"><span class="flag">--to</span><select id="to"></select></span>
+          <span class="ctl"><span class="flag">example</span><select id="example"></select></span>
+          <label class="toggle"
+            ><input type="checkbox" id="textOnly" /><span class="flag">--text-only</span></label
+          >
+          <label class="toggle"
+            ><input type="checkbox" id="strict" /><span class="flag">--strict</span></label
+          >
+          <span class="spacer"></span>
+          <span class="hint">updates as you type</span>
+        </div>
+
+        <div class="cmdline">
+          <span class="prompt">$</span><code id="cmd"></code>
+        </div>
+
+        <div class="grid">
+          <div class="pane">
+            <div class="pane-head">
+              input
+              <span class="grow"></span>
+              <span class="tag" id="from-tag">openai</span>
+            </div>
+            <div class="editor">
+              <textarea
+                id="input"
+                spellcheck="false"
+                autocapitalize="off"
+                autocomplete="off"
+                autocorrect="off"
+              ></textarea>
+            </div>
+            <div class="statusbar" id="status">valid JSON</div>
+          </div>
+
+          <div class="pane stack">
+            <div class="section">
+              <div class="pane-head">
+                report
+                <span class="grow"></span>
+                <span class="summary" id="summary"></span>
+              </div>
+              <ul id="notes"></ul>
+            </div>
+            <div class="section">
+              <div class="pane-head">
+                output
+                <span class="grow"></span>
+                <span class="tag" id="to-tag">anthropic</span>
+                <button class="copy" id="copy">copy</button>
+              </div>
+              <pre id="output"></pre>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="grid">
-        <div class="panel">
-          <div class="head"><span>Input JSON (from)</span></div>
-          <textarea id="input" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
-          <div class="status" id="status">valid JSON</div>
-        </div>
-
-        <div class="col-right">
-          <div class="panel">
-            <div class="head">
-              <span>Lossiness report</span>
-              <span class="summary" id="summary"></span>
-            </div>
-            <ul id="notes"></ul>
-          </div>
-          <div class="panel">
-            <div class="head">
-              <span>Output (to)</span>
-              <button class="copy" id="copy">Copy</button>
-            </div>
-            <pre id="output"></pre>
-          </div>
-        </div>
+      <div class="legend">
+        <span class="item"
+          ><span class="swatch" style="background: var(--cyan)"></span> info — faithful, reversible
+          change</span
+        >
+        <span class="item"
+          ><span class="swatch" style="background: var(--amber)"></span> warning — lossy but
+          necessary reshaping</span
+        >
+        <span class="item"
+          ><span class="swatch" style="background: var(--red)"></span> loss — content did not
+          survive</span
+        >
+        <span class="src"
+          >real output of <a href="https://github.com/ishaand0314/attrition">llm-attrition</a></span
+        >
       </div>
     </div>
 
@@ -384,12 +675,15 @@
         output: $("output"),
         summary: $("summary"),
         copy: $("copy"),
+        cmd: $("cmd"),
+        fromTag: $("from-tag"),
+        toTag: $("to-tag"),
       };
 
       // ── preloaded examples (each lights up a different severity) ──────────────
       const EXAMPLES = [
         {
-          label: "Multi-system merge (openai → anthropic)",
+          label: "Multi-system merge (openai -> anthropic)",
           from: "openai",
           to: "anthropic",
           textOnly: false,
@@ -402,7 +696,7 @@
           },
         },
         {
-          label: "Tool call + result (anthropic → gemini)",
+          label: "Tool call + result (anthropic -> gemini)",
           from: "anthropic",
           to: "gemini",
           textOnly: false,
@@ -426,7 +720,7 @@
           },
         },
         {
-          label: "Image → text-only target (openai → gemini)",
+          label: "Image -> text-only target (openai -> gemini)",
           from: "openai",
           to: "gemini",
           textOnly: true,
@@ -480,7 +774,7 @@
           const li = document.createElement("li");
           li.dataset.sev = "ok";
           const badge = document.createElement("span");
-          badge.className = "badge ok";
+          badge.className = "badge";
           badge.textContent = "OK";
           const body = document.createElement("span");
           body.className = "note-body";
@@ -495,7 +789,7 @@
           li.title = SEV_MEANING[n.severity] ?? "";
 
           const badge = document.createElement("span");
-          badge.className = "badge " + n.severity;
+          badge.className = "badge";
           badge.textContent = n.severity.toUpperCase();
 
           const body = document.createElement("span");
@@ -516,23 +810,33 @@
       function renderSummary(notes) {
         const counts = { info: 0, warning: 0, loss: 0 };
         for (const n of notes) counts[n.severity] = (counts[n.severity] ?? 0) + 1;
-        const parts = [];
-        if (counts.info) parts.push(counts.info + " info");
-        if (counts.warning) parts.push(counts.warning + " warning");
-        if (counts.loss) parts.push(counts.loss + " loss");
         els.summary.replaceChildren();
-        els.summary.classList.toggle("has-loss", counts.loss > 0);
-        els.summary.classList.toggle("has-warning", counts.loss === 0 && counts.warning > 0);
 
-        const text = document.createElement("span");
-        text.textContent = parts.length ? parts.join(" · ") : "lossless";
-        els.summary.appendChild(text);
+        const order = ["loss", "warning", "info"];
+        const any = order.some((k) => counts[k] > 0);
+        if (!any) {
+          const clean = document.createElement("span");
+          clean.className = "clean";
+          clean.textContent = "lossless";
+          els.summary.appendChild(clean);
+        } else {
+          for (const sev of order) {
+            if (!counts[sev]) continue;
+            const span = document.createElement("span");
+            span.dataset.sev = sev;
+            const n = document.createElement("span");
+            n.className = "count";
+            n.textContent = counts[sev];
+            span.append(n, document.createTextNode(" " + sev));
+            els.summary.appendChild(span);
+          }
+        }
 
         // --strict is a display concern only — it never changes convert() inputs.
         if (els.strict.checked && counts.loss > 0) {
           const pill = document.createElement("span");
           pill.className = "strict-pill";
-          pill.textContent = "STRICT: would exit 1";
+          pill.textContent = "strict: exit 1";
           els.summary.appendChild(pill);
         }
       }
@@ -547,8 +851,49 @@
         els.notes.classList.toggle("stale", stale);
       }
 
+      // Minimal, safe JSON syntax highlighting: escape first, then tint tokens.
+      function highlightJSON(json) {
+        const esc = json
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+        return esc.replace(
+          /("(\\.|[^"\\])*"(\s*:)?|\b(true|false)\b|\bnull\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g,
+          (m) => {
+            let cls = "j-num";
+            if (m.startsWith('"')) {
+              cls = /:\s*$/.test(m) ? "j-key" : "j-str";
+            } else if (m === "true" || m === "false") {
+              cls = "j-bool";
+            } else if (m === "null") {
+              cls = "j-null";
+            }
+            return `<span class="${cls}">${m}</span>`;
+          },
+        );
+      }
+
+      // ── live command echo: mirror the actual CLI invocation ───────────────────
+      function renderCmd() {
+        const from = els.from.value;
+        const to = els.to.value;
+        const parts = [
+          `<span class="bin">attrition</span>`,
+          `<span class="sub">convert</span>`,
+          `<span class="flag">--from</span> <span class="val">${from}</span>`,
+          `<span class="flag">--to</span> <span class="val">${to}</span>`,
+        ];
+        if (els.textOnly.checked) parts.push(`<span class="flag">--text-only</span>`);
+        if (els.strict.checked) parts.push(`<span class="flag">--strict</span>`);
+        parts.push(`<span class="pipe">&lt; conv.json</span>`);
+        els.cmd.innerHTML = parts.join(" ");
+        els.fromTag.textContent = from;
+        els.toTag.textContent = to;
+      }
+
       // ── pipeline ────────────────────────────────────────────────────────────
       function run() {
+        renderCmd();
         let parsed;
         try {
           parsed = JSON.parse(els.input.value);
@@ -565,13 +910,13 @@
         try {
           result = convert(from, to, parsed, { textOnly });
         } catch (e) {
-          setStatus(false, `Couldn't convert as ${from} → ${to}: ${e.message || e}`);
+          setStatus(false, `Couldn't convert as ${from} -> ${to}: ${e.message || e}`);
           setStale(true);
           return;
         }
         setStatus(true, "valid JSON");
         setStale(false);
-        els.output.textContent = JSON.stringify(result.output, null, 2);
+        els.output.innerHTML = highlightJSON(JSON.stringify(result.output, null, 2));
         renderNotes(result.notes);
         renderSummary(result.notes);
       }
@@ -598,11 +943,23 @@
         run();
       });
 
+      // Tab inserts two spaces in the editor instead of leaving the field.
+      els.input.addEventListener("keydown", (e) => {
+        if (e.key === "Tab") {
+          e.preventDefault();
+          const s = els.input.selectionStart;
+          const eIdx = els.input.selectionEnd;
+          const v = els.input.value;
+          els.input.value = v.slice(0, s) + "  " + v.slice(eIdx);
+          els.input.selectionStart = els.input.selectionEnd = s + 2;
+        }
+      });
+
       els.copy.addEventListener("click", async () => {
         try {
           await navigator.clipboard.writeText(els.output.textContent);
           const prev = els.copy.textContent;
-          els.copy.textContent = "Copied";
+          els.copy.textContent = "copied";
           setTimeout(() => {
             els.copy.textContent = prev;
           }, 1200);
